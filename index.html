@@ -80,6 +80,12 @@ end:
                     <li><strong>A Delay slot is used for all jumps/branches. Branch offset addresses are relative to the delay slot instruction.</strong></li>
                 </ul>
                 <p>MIPS Reference: <a href="mips_vol2.pdf">mips_vol2.pdf</a></p>
+                <div class="form-inline text-center">
+                    <div class="form-group">
+                        <button id="share" class="btn btn-primary">Share</button>
+                        <input type="text" id="share-address" class="form-control" placeholder="Url with encoded source code" value="" readonly>
+                    </div>
+                </div>
             </div>
             <div class="col-md-6">
                 <div id="register-table" class="table-responsive">
@@ -270,6 +276,18 @@ end:
         });
 
         document.getElementById('memory-go').addEventListener('click', displayMemory);
+        document.getElementById('share').addEventListener('click', shareLink);
+
+        function shareLink() {
+            editor.save();
+            var code = document.getElementById('code').value;
+            // TODO: initial regs
+
+            var str=encodeURI(JSON.stringify(code));
+            var url = window.location.href.split('?')[0];
+            var completeUrl=url+"?code="+str;
+            document.getElementById("share-address").value=completeUrl;
+        }
 
         function clearHighlight() {
             if(activeLine>=0) {
@@ -421,11 +439,34 @@ end:
         }
     </script>
     <script>
-        if (typeof(Storage) !== "undefined") {
-            let previousSessionCode = localStorage.getItem("code");
-            if (previousSessionCode !== null) {
-                document.getElementById('code').value = previousSessionCode;
+
+        function getUrlVars() {
+            return getUriVars(window.location.href);
+        }
+
+        function getUriVars(url) {
+            var vars = {};
+            console.log(url);
+            var parts = url.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
+        var codeVar=getUrlVars()["code"];
+        if(!(codeVar===undefined)){
+            code=JSON.parse(decodeURI(codeVar));
+            editor.setValue(code);
+            editor.save();
+        }else {
+            if (typeof(Storage) !== "undefined") {
+                let previousSessionCode = localStorage.getItem("code");
+                if (previousSessionCode !== null) {
+                    document.getElementById('code').value = previousSessionCode;
+                }
             }
+        }
+        if (typeof(Storage) !== "undefined") {
             window.onbeforeunload = function() {
                 editor.save();
                 localStorage.setItem("code", document.getElementById('code').value);
