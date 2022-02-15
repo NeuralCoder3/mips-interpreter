@@ -2,13 +2,13 @@ document.getElementById('memory-download').addEventListener('click', downloadFil
 
 function downloadAllMemory() {
     /** @type {Memory} */
-    var memory = globalP.getMemory();
+    var memory = globalP.machine.memory;
     var zero = 0;
     var byte = [0,0,0,0];
     var fileArr = [];
     var item = 0;
     for (var i = 0; i < Math.pow(2,20); i++) {
-        var mem = memory.getMem(i);
+        var mem = memory.readByte(i);
         if (mem != 0) {
             byte[i % 4] = mem;
         }

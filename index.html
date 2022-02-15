@@ -6,13 +6,14 @@
     <title>MIPS Interpreter</title>
     <meta name="description" content="MIPS Assembly Interpreter written in Javascript">
     <link rel="stylesheet" type="text/css" href="static/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="static/jquery-linedtextarea.css">
+    <!-- <link rel="stylesheet" type="text/css" href="static/jquery-linedtextarea.css"> -->
     <link rel="stylesheet" type="text/css" href="static/mips.css">
+    <link rel="stylesheet" href="https://codemirror.net/lib/codemirror.css">
 </head>
 <body>
     <div class="container">
         <div class="page-header">
-            <h1>MIPS Interpreter</h1>
+            <h1>CS MIPS Interpreter</h1>
         </div>
         <div id="warnings-container" class="alert alert-warning" style="display: none;"></div>
         <div id="errors-container" class="alert alert-danger" style="display: none;">
@@ -23,11 +24,25 @@
             <div class="col-md-6">
                 <p class="lead">Input your MIPS code here:</p>
                 <div class="form-group">
-                    <textarea id="code" rows="15" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+                    <textarea id="code" rows="15" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+.text
+	li $t0, 21
+	li $t1, 0
+loop: 
+	beq $t0, $zero, end
+	addi $t0, $t0, -1
+	addi $t1, $t1, 2
+	j loop
+end:
+
+                    </textarea>
                 </div>
                 <div class="btn-group btn-group-justified" role="group">
                     <div class="btn-group">
                         <button id="reset" class="btn btn-primary">Reset</button>
+                    </div>
+                    <div class="btn-group">
+                        <button id="backstep" class="btn btn-warning">Back</button>
                     </div>
                     <div class="btn-group">
                         <button id="step" class="btn btn-warning">Step</button>
@@ -65,16 +80,6 @@
                     <li>Set a breakpoint by clicking on the line number (only for <em>Run</em>)</li>
                     <li>View <a href="#register-table">registers</a> on the right, <a href="#memory-table">memory</a> on the bottom of this page</li>
                     <li><strong>A Delay slot is used for all jumps/branches. Branch offset addresses are relative to the delay slot instruction.</strong></li>
-                </ul>
-                <h4>Supported Instructions</h4>
-                <ul>
-                    <li>Immediate Arithmetic: <a href="mips_vol2.pdf#G12.997393"><code>ADDIU</code></a>, <a href="mips_vol2.pdf#G15.997393"><code>ANDI</code></a>, <a href="mips_vol2.pdf#G110.997393"><code>ORI</code></a>, <a href="mips_vol2.pdf#G160.997393"><code>XORI</code></a>, <a href="mips_vol2.pdf#G122.997393"><code>SLTI</code></a>, <a href="mips_vol2.pdf#G123.997876"><code>SLTIU</code></a></li>
-                    <li>Register Arithmetic: <a href="mips_vol2.pdf#G13.997413"><code>ADDU</code></a>, <a href="mips_vol2.pdf#G133.997413"><code>SUBU</code></a>, <a href="mips_vol2.pdf#G14.1000988"><code>AND</code></a>, <a href="mips_vol2.pdf#G109.997713"><code>OR</code></a>, <a href="mips_vol2.pdf#G159.997701"><code>XOR</code></a>, <a href="mips_vol2.pdf#G108.997719"><code>NOR</code></a>, <a href="mips_vol2.pdf#G121.997413"><code>SLT</code></a>, <a href="mips_vol2.pdf#G124.997413"><code>SLTU</code></a></li>
-                    <li>Move: <a href="mips_vol2.pdf#G89.997389"><code>MOVN</code></a>, <a href="mips_vol2.pdf#G93.997388"><code>MOVZ</code></a></li>
-                    <li>Shifts: <a href="mips_vol2.pdf#G119.997413"><code>SLL</code></a>, <a href="mips_vol2.pdf#G128.997413"><code>SRL</code></a>, <a href="mips_vol2.pdf#G126.997413"><code>SRA</code></a>, <a href="mips_vol2.pdf#G120.997413"><code>SLLV</code></a>, <a href="mips_vol2.pdf#G129.997413"><code>SRLV</code></a>, <a href="mips_vol2.pdf#G127.997413"><code>SRAV</code></a></li>
-                    <li>Immediate Load: <a href="mips_vol2.pdf#G73.997394"><code>LUI</code></a></li>
-                    <li>Control: <a href="mips_vol2.pdf#G62.997375"><code>J</code></a>, <a href="mips_vol2.pdf#G65.997706"><code>JR</code></a>, <a href="mips_vol2.pdf#G63.997375"><code>JAL</code></a>, <a href="mips_vol2.pdf#G64.997414"><code>JALR</code></a>, <a href="mips_vol2.pdf#G26.997393"><code>BEQ</code></a>, <a href="mips_vol2.pdf#G40.997393"><code>BNE</code></a>, <a href="mips_vol2.pdf#G34.997394"><code>BLEZ</code></a>, <a href="mips_vol2.pdf#G32.997394"><code>BGTZ</code></a>, <a href="mips_vol2.pdf#G36.997394"><code>BLTZ</code></a>, <a href="mips_vol2.pdf#G28.997394"><code>BGEZ</code></a></li>
-                    <li>Memory: <a href="mips_vol2.pdf#G74.997393"><code>LW</code></a>, <a href="mips_vol2.pdf#G66.997393"><code>LB</code></a>, <a href="mips_vol2.pdf#G67.997393"><code>LBU</code></a>, <a href="mips_vol2.pdf#G134.997393"><code>SW</code></a>, <a href="mips_vol2.pdf#G113.997393"><code>SB</code></a></li>
                 </ul>
                 <p>MIPS Reference: <a href="mips_vol2.pdf">mips_vol2.pdf</a></p>
             </div>
@@ -167,18 +172,25 @@
             </div>
         </div>
     </div>
+    <script src="static/jsmipssim.min.js"></script>
     <script src="static/jquery.min.js"></script>
     <script src="static/sprintf.min.js"></script>
-    <script src="static/jquery-linedtextarea.js"></script>
+    <!-- <script src="static/jquery-linedtextarea.js"></script> -->
     <script src="static/bootstrap.min.js"></script>
-    <script src="static/mips.js"></script>
+    <!-- <script src="static/mips.js"></script> -->
     <script src="static/FileSaver.js"></script>
+    <script src="https://codemirror.net/lib/codemirror.js"></script>
+    <script src="https://codemirror.net/mode/gas/gas.js"></script>
     <script>
-        $('#code').linedtextarea();
-        $('.codelines').on('click', '.lineno', function() {
-            $(this).toggleClass('lineselect');
+        // $('#code').linedtextarea();
+        // $('.codelines').on('click', '.lineno', function() {
+        //     $(this).toggleClass('lineselect');
+        // });
+        var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+            mode: {name: "gas", architecture: "ARMv6"},
+            lineNumbers: true,
         });
-        $('#code').bind('input propertychange', function() { // if the MIPS code changes, invalidate the current program instance
+        editor.on("change",function() {
             stop();
             if (!programTerminated) {
                 programTerminated = true;
@@ -189,12 +201,13 @@
     </script>
     <script>
         "use strict";
-        var globalP = new Program();
+        var globalP = undefined;//new Assembler("");
         var initialRegisters = new Int32Array(32);
         var recentInsns = [];
         var runner = undefined;
         var programTerminated = true;
         var cpuFrequency = 32;
+        var activeLine=-1;
 
         function setFrequency(freq) {
             cpuFrequency = freq;
@@ -209,13 +222,20 @@
             stop();
             clearAlerts(); // Clear any previous warnings/errors
             programTerminated = false;
+            editor.save();
             var code = document.getElementById('code').value;
-            globalP = new Program(code);
+            // var code = editor.value();
+            console.log(code);
+            // globalP = new Assembler(code);
+            // globalP.assemble();
+            mips.assemble(code);
+            globalP=mips._a;
             initializeRegisters(globalP);
             recentInsns = [];
             displayRegisters();
             displayMemory();
             displayErrors();
+            document.getElementById('backstep').parentElement.style.display = "";
             document.getElementById('step').parentElement.style.display = "";
             document.getElementById('run').parentElement.style.display = "";
             document.getElementById('stop').parentElement.style.display = "none";
@@ -224,6 +244,13 @@
         document.getElementById('reset').addEventListener('click', function() {
             setup();
             document.getElementById('recent-instruction').innerHTML = "The most recent instructions will be shown here when stepping."
+        });
+
+        document.getElementById('backstep').addEventListener('click', function() {
+            if (globalP === undefined) {
+                setup();
+            }
+            backstep();
         });
 
         document.getElementById('step').addEventListener('click', function() {
@@ -239,6 +266,7 @@
             }
             clearAlerts();
             runner = setInterval(stepWithBreakpoint, 1000 / cpuFrequency);
+            document.getElementById('backstep').parentElement.style.display = "none";
             document.getElementById('step').parentElement.style.display = "none";
             document.getElementById('run').parentElement.style.display = "none";
             document.getElementById('stop').parentElement.style.display = "";
@@ -246,6 +274,7 @@
 
         document.getElementById('stop').addEventListener('click', function() {
             stop();
+            document.getElementById('backstep').parentElement.style.display = "";
             document.getElementById('step').parentElement.style.display = "";
             document.getElementById('run').parentElement.style.display = "";
             document.getElementById('stop').parentElement.style.display = "none";
@@ -253,101 +282,187 @@
 
         document.getElementById('memory-go').addEventListener('click', displayMemory);
 
-        function getRecentInsnsHTML() {
-            var recentInstructionHTML = "";
-            for (var i = 0; i < recentInsns.length; ++i) {
-                // mark the last element as the current instruction executed
-                if (i === recentInsns.length-1) {
-                    recentInstructionHTML += '<span class="current">' + "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + '</span>' + ((recentInsns[i][1]) ? " (Delay Slot)":"");
-                }
-                else {
-                    recentInstructionHTML += "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + ((recentInsns[i][1]) ? " (Delay Slot)":"") + "<br>";
-                }
+        // function getRecentInsnsHTML() {
+        //     var recentInstructionHTML = "";
+        //     for (var i = 0; i < recentInsns.length; ++i) {
+        //         // mark the last element as the current instruction executed
+        //         if (i === recentInsns.length-1) {
+        //             recentInstructionHTML += '<span class="current">' + "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + '</span>' + ((recentInsns[i][1]) ? " (Delay Slot)":"");
+        //         }
+        //         else {
+        //             recentInstructionHTML += "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + ((recentInsns[i][1]) ? " (Delay Slot)":"") + "<br>";
+        //         }
+        //     }
+        //     return recentInstructionHTML;
+        // }
+
+        // function highlightLines(editor, line, enable) {
+        //     // const MAX_LINE_LENGTH = 2048;
+        //     // const from = {line: start, ch: 0};
+        //     // const to = {line: end, ch: MAX_LINE_LENGTH};
+        //     // editor.markText(from, to, {className: "CodeMirror-activeline-background"});
+        //     if(enable)
+        //         editor.addLineClass(line,"background","CodeMirror-activeline-background");
+        //     else
+        //         editor.removeLineClass(line,"background","CodeMirror-activeline-background");
+        // }
+
+        function clearHighlight() {
+            if(activeLine>=0) {
+                editor.removeLineClass(activeLine,"background","CodeMirror-activeline-background");
+                activeLine=-1;
             }
-            return recentInstructionHTML;
+                // highlightLines(editor,activeLine,false);
         }
 
-        function step() {
-            if (globalP.pc / 4 < globalP.insns.length) {
-                var currentInsn = globalP.insns[globalP.pc / 4];
-                trackInsn(currentInsn, false);
-                document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
-                globalP.step();
-                for (var i = 0; i < globalP.delaySlotInsnsPC.length; ++i) {
-                    var delaySlotInsn = globalP.insns[globalP.delaySlotInsnsPC.shift() / 4];
-                    // update the recent instructions with the delay slot instruction
-                    if (delaySlotInsn !== undefined) {
-                        trackInsn(delaySlotInsn, true);
-                    }
-                    document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
-                }
-            }
-            else {
-                if (!programTerminated) {
-                    programTerminated = true;
-                    document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
-                }
+        // const PROGRAM_START_ADDRESS = 0x00400000;
+        // const DATA_START_ADDRESS = 0x10010000;
+        // const STACK_UPPER_ADDRESS = 0x7FFFEFFC;
+        function trackInstr() {
+            clearHighlight();
+
+            var pc = globalP.machine.registers.getPC();
+            // console.log(pc);
+            // console.log(pc-PROGRAM_START_ADDRESS);
+            // var line = (pc-PROGRAM_START_ADDRESS)/4;
+            var instr=globalP.instructionsDisplay.find((e) => e[0]==pc)[3];
+            if(instr.instruction)
+                instr=instr.instruction;
+            let line=-1;
+            if(instr.token)
+                line = instr.token.line;
+            if(line<0)
+                return;
+            activeLine=line;
+            editor.addLineClass(line,"background","CodeMirror-activeline-background");
+            // highlightLines(editor,line,line, true);
+            // editor.setLineClass(line, 'background', 'line-error');
+        }
+
+        function backstep() {
+            if(!mips.backstep()) {
+            }else{
+                trackInstr();
             }
             displayRegisters();
             displayMemory();
             displayErrors();
         }
 
+        function step() {
+            if(!mips.step()) {
+                trackInstr();
+                // var currentInsn = undefined; // TODO:
+                // trackInsn(currentInsn, false);
+                // TODO:
+                // document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
+
+                // TODO:
+                // for (var i = 0; i < globalP.delaySlotInsnsPC.length; ++i) {
+                //     var delaySlotInsn = globalP.insns[globalP.delaySlotInsnsPC.shift() / 4];
+                //     // update the recent instructions with the delay slot instruction
+                //     if (delaySlotInsn !== undefined) {
+                //         trackInsn(delaySlotInsn, true);
+                //     }
+                //     document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
+                // }
+            }else {
+                if (!programTerminated) {
+                    programTerminated = true;
+                    document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
+                }
+            }
+            // if (globalP.pc / 4 < globalP.insns.length) {
+                // var currentInsn = globalP.insns[globalP.pc / 4];
+                // trackInsn(currentInsn, false);
+                // document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
+                // globalP.step();
+                // for (var i = 0; i < globalP.delaySlotInsnsPC.length; ++i) {
+                //     var delaySlotInsn = globalP.insns[globalP.delaySlotInsnsPC.shift() / 4];
+                //     // update the recent instructions with the delay slot instruction
+                //     if (delaySlotInsn !== undefined) {
+                //         trackInsn(delaySlotInsn, true);
+                //     }
+                //     document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
+                // }
+            // }
+            // else {
+            //     if (!programTerminated) {
+            //         programTerminated = true;
+            //         document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
+            //     }
+            // }
+            displayRegisters();
+            displayMemory();
+            displayErrors();
+        }
+
         function stepWithBreakpoint() {
-            var breakpoints = document.getElementsByClassName('lineselect');
-            if (breakpoints.length > 0) { // there is a breakpoint
-                var breaklines = [];
-                for (var i = 0; i < breakpoints.length; ++i) {
-                    breaklines.push(parseInt(breakpoints[i].innerHTML));
-                }
-                var currentInsn = globalP.insns[globalP.pc / 4];
-                if (currentInsn !== undefined) {
-                    if (breaklines.indexOf(currentInsn[1]) == -1)  { // not at a breakpoint
-                        step();
-                    }
-                    else { // instruction is a breakpoint
-                        stop();
-                        document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + currentInsn[1] + ". Breakpoint!";
-                        document.getElementById('warnings-container').style.display = "";
-                        document.getElementById('step').parentElement.style.display = "";
-                        document.getElementById('run').parentElement.style.display = "";
-                        document.getElementById('stop').parentElement.style.display = "none";
-                    }
-                }
-                else {
-                    if (!programTerminated) {
-                        programTerminated = true;
-                        document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
-                    }
-                    else {}
-                }
-            }
-            else { // no breakpoint selected
+            // var breakpoints = document.getElementsByClassName('lineselect');
+            // if (breakpoints.length > 0) { // there is a breakpoint
+            //     var breaklines = [];
+            //     for (var i = 0; i < breakpoints.length; ++i) {
+            //         breaklines.push(parseInt(breakpoints[i].innerHTML));
+            //     }
+            //     var currentInsn = globalP.insns[globalP.pc / 4];
+            //     if (currentInsn !== undefined) {
+            //         if (breaklines.indexOf(currentInsn[1]) == -1)  { // not at a breakpoint
+            //             step();
+            //         }
+            //         else { // instruction is a breakpoint
+            //             stop();
+            //             document.getElementById('warnings-container').innerHTML = "Code execution stopped on line " + currentInsn[1] + ". Breakpoint!";
+            //             document.getElementById('warnings-container').style.display = "";
+            //             document.getElementById('step').parentElement.style.display = "";
+            //             document.getElementById('run').parentElement.style.display = "";
+            //             document.getElementById('stop').parentElement.style.display = "none";
+            //         }
+            //     }
+            //     else {
+            //         if (!programTerminated) {
+            //             programTerminated = true;
+            //             document.getElementById('recent-instruction').innerHTML += "<br>No more instructions to run! Press <em>Reset</em> to reload the code!";
+            //         }
+            //         else {}
+            //     }
+            // }
+            // else { // no breakpoint selected
                 step();
-            }
+            // }
         }
 
         function stop() {
             if (runner !== undefined) {
                 clearInterval(runner);
+                clearHighlight();
             }
             runner = undefined;
         }
 
-        function trackInsn(insn, isDelaySlot) {
-            if (recentInsns.length >= 5) {
-                recentInsns.shift(); // removes the oldest instruction
-            }
-            recentInsns.push([insn, isDelaySlot]);
-        }
+        // function trackInsn(insn, isDelaySlot) {
+        //     if (recentInsns.length >= 5) {
+        //         recentInsns.shift(); // removes the oldest instruction
+        //     }
+        //     recentInsns.push([insn, isDelaySlot]);
+        // }
 
         function displayRegisters() {
-            var registers = globalP.getRegisters();
-            var registersHTML = sprintf('<tr><td>%d</td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
-                registers[0], 0, getRegisterSyntacticSugar(0), registers[0], registers[0] >>> 0, (registers[i] >>> 0).toString(2));
-            for (var i = 1; i < 32; ++i) {
-                registersHTML += sprintf('<tr><td><input class="init-value" type="text" value="%d"></td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
-                    initialRegisters[i], i, getRegisterSyntacticSugar(i), registers[i], registers[i] >>> 0, (registers[i] >>> 0).toString(2));
+            var registers = globalP.machine.registers;
+            var registersHTML = "";
+            // sprintf('<tr><td>%d</td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</tr>',
+            //     registers[0], 0, getRegisterSyntacticSugar(0), registers[0], registers[0] >>> 0, (registers[i] >>> 0).toString(2));
+            for (var i = 0; i < 32; ++i) {
+                let cell0="";
+                if(i==0) {
+                    cell0='%d';
+                }else {
+                    cell0='<input class="init-value" type="text" value="%d">';
+                }
+                var format = '<tr><td>'+cell0+'</td><td>$%d (%s)</td><td>%d</td><td>0x%08x</td><td>0b%032s</td></tr>';
+                // var regVal = registers[i];
+                var regVal = registers.get(i);
+                registersHTML += sprintf(format,
+                    initialRegisters[i], i, getRegisterSyntacticSugar(i), regVal, regVal >>> 0, (regVal >>> 0).toString(2));
             }
             if (registersHTML != document.getElementById('registers').innerHTML) {
                 document.getElementById('registers').innerHTML = registersHTML;
@@ -355,22 +470,24 @@
         }
 
         function displayMemory() {
-            var memory = globalP.getMemory();
+            var memory = globalP.machine.memory;
             var memoryHTML = "";
             var memAddress = parseInt(document.getElementById('memory-address').value) >>> 0;
             var addr = memAddress - (memAddress % 4); // keep memory locations as multiple of 4
-            if (!memory.isValidAddress(addr)) {
+            // TODO:
+            if (false && !memory.isValidAddress(addr)) {
                 memoryHTML = '<tr class="danger"><td>Invalid memory location: ' + sprintf("0x%x", memAddress) + '. Memory addresses must be from 0x00000000 - 0x7fffffff</td><td></td><td></td><td></td></tr>';
             }
             else {
                 var start = Math.max(addr - 40, 0x00000000);
                 var end = Math.min(addr + 40, 0x80000000);
                 for (var i = start; i < end; i += 4) {
-                    var lsb = memory.getMem(i);
-                    var byte2 = memory.getMem(i+1) << 8;
-                    var byte3 = memory.getMem(i+2) << 16;
-                    var msb = memory.getMem(i+3) << 24;
-                    var memValue = msb | byte3 | byte2 | lsb;
+                    // var lsb = memory.getMem(i);
+                    // var byte2 = memory.getMem(i+1) << 8;
+                    // var byte3 = memory.getMem(i+2) << 16;
+                    // var msb = memory.getMem(i+3) << 24;
+                    // var memValue = msb | byte3 | byte2 | lsb;
+                    var memValue = memory.readWord(i);
                     memoryHTML += (memValue == 0) ? '<tr>' : '<tr class="info">';
                     memoryHTML += sprintf("<td>0x%08x</td><td>%d</td><td>0x%08x</td><td>0b%032s</td>",
                         i, memValue, memValue >>> 0, (memValue >>> 0).toString(2));
@@ -383,7 +500,8 @@
         }
 
         function displayErrors() {
-            var errors = globalP.getErrors();
+            // TODO:
+            var errors = [];//globalP.getErrors();
             if (errors.length > 0) {
                 document.getElementById('errors').innerHTML = errors.join('<br>');
                 document.getElementById('errors-container').style.display = "";
@@ -398,14 +516,16 @@
         }
 
         function initializeRegisters(program) {
+            // TODO:
             initialRegisters = new Int32Array(32);
             var initDOM = document.getElementById('registers').getElementsByClassName('init-value');
             initialRegisters[0] = 0; // zero register is hard-wired to 0
             for (var i = 1; i < 32; i++) {
                 var value = parseInt(initDOM[i-1].value) >> 0;
                 initialRegisters[i] = value;
+                program.machine.registers.set(i,value);
             }
-            program.registers = initialRegisters.slice();
+            // program.registers = initialRegisters.slice();
         }
 
         var registerSyntactic = [
@@ -430,6 +550,7 @@
                 document.getElementById('code').value = previousSessionCode;
             }
             window.onbeforeunload = function() {
+                editor.save();
                 localStorage.setItem("code", document.getElementById('code').value);
             };
         }
