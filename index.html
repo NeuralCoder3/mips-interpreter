@@ -12,7 +12,10 @@
 <body>
     <div class="container">
         <div class="page-header">
-            <h1>CS MIPS Interpreter</h1>
+            <h1>MIPS Interpreter</h1>
+            by Marcel Ullrich<br>
+            Interface derived from <a href="https://github.com/dannyqiu/mips-interpreter">Danny Qiu</a><br>
+            Interpreter by Dominik Luche
         </div>
         <div id="warnings-container" class="alert alert-warning" style="display: none;"></div>
         <div id="errors-container" class="alert alert-danger" style="display: none;">
@@ -77,7 +80,6 @@ end:
                     <li><em>Reset</em> to load the code, <em>Step</em> one instruction, or <em>Run</em> all instructions</li>
                     <li>Set a breakpoint by clicking on the line number (only for <em>Run</em>)</li>
                     <li>View <a href="#register-table">registers</a> on the right, <a href="#memory-table">memory</a> on the bottom of this page</li>
-                    <li><strong>A Delay slot is used for all jumps/branches. Branch offset addresses are relative to the delay slot instruction.</strong></li>
                 </ul>
                 <p>MIPS Reference: <a href="mips_vol2.pdf">mips_vol2.pdf</a></p>
                 <div class="form-inline text-center">
