@@ -19,7 +19,7 @@
         </div>
         <div id="warnings-container" class="alert alert-warning" style="display: none;"></div>
         <div id="errors-container" class="alert alert-danger" style="display: none;">
-            <p class="lead">OOPS! Your MIPS Assembly code ran, but there were errors...</p>
+            <p class="lead">There were errors...</p>
             <div id="errors"></div>
         </div>
         <div class="row">
@@ -30,6 +30,7 @@
 .text
 	li $t0, 21
 	li $t1, 0
+    sw $t0, ($t1)
 loop: 
 	beq $t0, $zero, end
 	addi $t0, $t0, -1
@@ -82,10 +83,8 @@ end:
                 </ul>
                 <p>MIPS Reference: <a href="mips_vol2.pdf">mips_vol2.pdf</a></p>
                 <div class="form-inline text-center">
-                    <div class="form-group">
                         <button id="share" class="btn btn-primary">Share</button>
                         <input type="text" id="share-address" class="form-control" placeholder="Url with encoded source code" value="" readonly>
-                    </div>
                 </div>
             </div>
             <div class="col-md-6">
@@ -224,7 +223,15 @@ end:
             editor.save();
             var code = document.getElementById('code').value;
             console.log(code);
-            mips.assemble(code);
+            try {
+                mips.assemble(code);
+            }catch(e) {
+                // if(e is instanceof Error)
+                // console.log(e.message);
+                document.getElementById('errors').innerHTML = [e.message].join('<br>');
+                document.getElementById('errors-container').style.display = "";
+                return;
+            }
             globalP=mips._a;
             initializeRegisters(globalP);
             recentInsns = [];
@@ -344,9 +351,9 @@ end:
         }
 
         function stop() {
+            clearHighlight();
             if (runner !== undefined) {
                 clearInterval(runner);
-                clearHighlight();
             }
             runner = undefined;
         }
