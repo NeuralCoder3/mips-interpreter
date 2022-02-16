@@ -206,6 +206,7 @@ end:
         var programTerminated = true;
         var cpuFrequency = 32;
         var activeLine=-1;
+        var lastpc=-1;
 
         function setFrequency(freq) {
             cpuFrequency = freq;
@@ -242,6 +243,7 @@ end:
             document.getElementById('step').parentElement.style.display = "";
             document.getElementById('run').parentElement.style.display = "";
             document.getElementById('stop').parentElement.style.display = "none";
+            trackInstr();
         }
 
         document.getElementById('reset').addEventListener('click', function() {
@@ -304,26 +306,61 @@ end:
             }
         }
 
-        function trackInstr() {
-            clearHighlight();
-
-            var pc = globalP.machine.registers.getPC();
+        function instrFromPC(pc) {
             var instr=globalP.instructionsDisplay.find((e) => e[0]==pc)[3];
             if(instr.instruction)
                 instr=instr.instruction;
+            return instr;
+        }
+
+        function trackInstr() {
+            clearHighlight();
+
+            if(lastpc>0) {
+                var instr=instrFromPC(lastpc);
+
+                // console.log("executed",instr);
+                if (recentInsns.length >= 5) {
+                    recentInsns.shift(); // removes the oldest instruction
+                }
+                recentInsns.push(instr);
+            }
+
+            var newpc = globalP.machine.registers.getPC();
+            var newInstr=instrFromPC(newpc);
+
             let line=-1;
-            if(instr.token)
-                line = instr.token.line;
+            if(newInstr.token)
+                line = newInstr.token.line;
             if(line<0)
                 return;
             activeLine=line;
             editor.addLineClass(line,"background","CodeMirror-activeline-background");
+
+        }
+
+        function getRecentInsnsHTML() {
+            var recentInstructionHTML = "";
+            for (var i = 0; i < recentInsns.length; ++i) {
+                // mark the last element as the current instruction executed
+                const instr=recentInsns[i];
+                let instrTxt= "L"+instr.token.line+": "+instr.name+" "+instr.params.join(" ")+"<br>";
+                if (i === recentInsns.length-1) {
+                    instrTxt='<span class="current">'+instrTxt+'</span>';
+                }
+                recentInstructionHTML+=instrTxt;
+                // "[line " + recentInsns[i][0][1] + "]: " + recentInsns[i][0][2] + ((recentInsns[i][1]) ? " (Delay Slot)":"") + "<br>";
+            }
+            return recentInstructionHTML;
         }
 
         function backstep() {
+            lastpc = globalP.machine.registers.getPC();
             if(!mips.backstep()) {
+                trackInstr();
             }else{
                 trackInstr();
+                document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
             }
             displayRegisters();
             displayMemory();
@@ -331,10 +368,10 @@ end:
         }
 
         function step() {
+            lastpc = globalP.machine.registers.getPC();
             if(!mips.step()) {
                 trackInstr();
-                // TODO: show last instruction
-                // document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
+                document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
             }else {
                 if (!programTerminated) {
                     programTerminated = true;
@@ -351,6 +388,7 @@ end:
         }
 
         function stop() {
+            lastpc=-1;
             clearHighlight();
             if (runner !== undefined) {
                 clearInterval(runner);
