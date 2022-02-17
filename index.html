@@ -307,7 +307,10 @@ end:
         }
 
         function instrFromPC(pc) {
-            var instr=globalP.instructionsDisplay.find((e) => e[0]==pc)[3];
+            var loc = globalP.instructionsDisplay.find((e) => e[0]==pc);
+            if(!loc)
+                return undefined;
+            var instr=loc[3];
             if(instr.instruction)
                 instr=instr.instruction;
             return instr;
@@ -318,12 +321,13 @@ end:
 
             if(forward && lastpc>0) {
                 var instr=instrFromPC(lastpc);
-
-                // console.log("executed",instr);
-                if (recentInsns.length >= 5) {
-                    recentInsns.shift(); // removes the oldest instruction
+                if(instr) {
+                    // console.log("executed",instr);
+                    if (recentInsns.length >= 5) {
+                        recentInsns.shift(); // removes the oldest instruction
+                    }
+                    recentInsns.push(instr);
                 }
-                recentInsns.push(instr);
             } else if(!forward) {
                 if(recentInsns.length>0)
                     recentInsns.pop();
@@ -331,6 +335,8 @@ end:
 
             var newpc = globalP.machine.registers.getPC();
             var newInstr=instrFromPC(newpc);
+            if(!newInstr)
+                return;
 
             let line=-1;
             if(newInstr.token)
