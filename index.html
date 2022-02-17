@@ -313,10 +313,10 @@ end:
             return instr;
         }
 
-        function trackInstr() {
+        function trackInstr(forward=true) {
             clearHighlight();
 
-            if(lastpc>0) {
+            if(forward && lastpc>0) {
                 var instr=instrFromPC(lastpc);
 
                 // console.log("executed",instr);
@@ -324,6 +324,9 @@ end:
                     recentInsns.shift(); // removes the oldest instruction
                 }
                 recentInsns.push(instr);
+            } else if(!forward) {
+                if(recentInsns.length>0)
+                    recentInsns.pop();
             }
 
             var newpc = globalP.machine.registers.getPC();
@@ -357,11 +360,13 @@ end:
         function backstep() {
             lastpc = globalP.machine.registers.getPC();
             if(!mips.backstep()) {
-                trackInstr();
+                // trackInstr();
             }else{
-                trackInstr();
-                document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
+                // trackInstr();
+                // document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
             }
+            trackInstr(false);
+            document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
             displayRegisters();
             displayMemory();
             displayErrors();
@@ -370,7 +375,7 @@ end:
         function step() {
             lastpc = globalP.machine.registers.getPC();
             if(!mips.step()) {
-                trackInstr();
+                trackInstr(true);
                 document.getElementById('recent-instruction').innerHTML = getRecentInsnsHTML();
             }else {
                 if (!programTerminated) {
