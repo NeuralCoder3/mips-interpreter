@@ -293,7 +293,8 @@ end:
             var code = document.getElementById('code').value;
             // TODO: initial regs
 
-            var str=encodeURI(JSON.stringify(code));
+            // var str=encodeURI(JSON.stringify(code));
+            var str=encodeURIComponent(code);
             var url = window.location.href.split('?')[0];
             var completeUrl=url+"?code="+str;
             document.getElementById("share-address").value=completeUrl;
@@ -512,7 +513,8 @@ end:
 
         var codeVar=getUrlVars()["code"];
         if(!(codeVar===undefined)){
-            code=JSON.parse(decodeURI(codeVar));
+            //code=JSON.parse(decodeURI(codeVar));
+            code=(decodeURIComponent(codeVar));
             editor.setValue(code);
             editor.save();
         }else {
